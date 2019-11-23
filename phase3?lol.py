@@ -10,7 +10,7 @@ import re
 da = "da.idx"  # Dates
 em = "em.idx"  # Emails
 te = "te.idx"  # Terms
-re2 = "re.idx"  # Row IDs
+re2 = "re.idx"	# Row IDs
 
 # Creates/opens primary database NOT SURE WE ACTUALLY NEED THIS.
 # P_db = db.DB() # Creates instance of Berkeley DB: database
@@ -61,30 +61,34 @@ while(True):
     # Has user choose whether to enter a query, change output display or exit.
     #main_menu(view)
 
-
     # Splits up entered query into a list of each word entered.
-    # Should make it much easier to figure out wtf the user is asking.
     txt = input("Query: ")
     x = re.split(" |:", txt)
     i = 0
     len = len(x)
     while(i < len):
-        if(x[i] == ""):
-            x.remove(x[i])
-            len = len-1
-            continue
-        i = i+1
+	if(x[i] == ""):
+	    x.remove(x[i])
+	    len = len-1
+	    continue
+	i = i+1
     print(x)
     test = input(" ")
 
+    if len == 2 or len == 1:
+	single_search(x)
+    
 
-    # Test to print out all records in re (row id index file)
+
+
+
+    
     # rec = cre.first()
     # while rec:
-    #     print("1: \n")
-    #     print(rec)
-    #     print("\n")
-    #     rec = cre.next()
+    #	  print("1: \n")
+    #	  print(rec)
+    #	  print("\n")
+    #	  rec = cre.next()
     # break
 
 
@@ -92,24 +96,60 @@ while(True):
 ########## Function definitions #######################
 def mode_change(view):
     while(True):
-        view = input("output=full or output=brief?")
-        if view == "output=full":
-            view = 2
-            break
-        elif view == "output=brief":
-            view = 1
-            break
-        print("Error, try again.")
+	view = input("output=full or output=brief?")
+	if view == "output=full":
+	    view = 2
+	    break
+	elif view == "output=brief":
+	    view = 1
+	    break
+	print("Error, try again.")
 
 def main_menu(view):
     while(True):
-        action = input("[1] Query\n[2] Mode change\n[3] Exit")
-        if action == 2:
-            mode_change(view)
-        elif action == 3:
-            print("Have a nice day!")
-            time.sleep(2)
-            exit()
+	action = input("[1] Query\n[2] Mode change\n[3] Exit")
+	if action == 2:
+	    mode_change(view)
+	elif action == 3:
+	    print("Have a nice day!")
+	    time.sleep(2)
+	    exit()
+
+
+### Basing these function definitions off of the marking rubric functionality list from eclass.
+
+# Search when only a single condition present
+def single_search(x):
+
+    if(len == 2):
+	term1 = x[0]
+	term2 = x[1]
+	term1 = term1.lower()
+	term2 = term2.lower()
+
+	if term1 == "subj" or term1 == "subject" or term1 == "body":
+	    x = "test"	
+	elif term1 == "date":	  
+	elif term1 == "from" or term1 == "to" or term1 == "cc" or term1 == "bcc":
+	    
+    
+def multiple_search():
+    exit()
+
+def partial_search():
+    exit()
+
+def range_search():
+    exit()
+
+def complex_search():
+    exit()
+
+def output(view):
+    exit()
+
+
+
 
 
 
