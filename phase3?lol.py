@@ -63,6 +63,7 @@ while(True):
 
 
     # Splits up entered query into a list of each word entered.
+    # Should make it much easier to figure out wtf the user is asking.
     txt = input("Query: ")
     x = re.split(" |:", txt)
     i = 0
