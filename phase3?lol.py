@@ -1,4 +1,7 @@
 from bsddb3 import db
+import time
+import os
+import re
 
 #### PART 1: Creates databases and inserts elements ####
 
@@ -7,7 +10,7 @@ from bsddb3 import db
 da = "da.idx"  # Dates
 em = "em.idx"  # Emails
 te = "te.idx"  # Terms
-re = "re.idx"  # Row IDs
+re2 = "re.idx"  # Row IDs
 
 # Creates/opens primary database NOT SURE WE ACTUALLY NEED THIS.
 # P_db = db.DB() # Creates instance of Berkeley DB: database
@@ -29,7 +32,7 @@ te_db.open(te, None, db.DB_BTREE, db.DB_CREATE)
 
 re_db = db.DB()
 re_db.set_flags(db.DB_DUP)
-re_db.open(re, None, db.DB_HASH, db.DB_CREATE)
+re_db.open(re2, None, db.DB_HASH, db.DB_CREATE)
 
 # Skeletons for {database} being opened for each index type.
 # database.open(DB_File ,None, db.DB_HASH, db.DB_CREATE)
@@ -38,23 +41,80 @@ re_db.open(re, None, db.DB_HASH, db.DB_CREATE)
 # database.open(DB_File ,None, db.DB_RECNO, db.DB_CREATE)
 # The arguments correspond to (fileName, database name within the file for multiple databases, database type, flag to create database)
 
-database = db.DB()
-database.set_flags(db.DB_DUP)
-database.open(re, None, db.DB_HASH, db.DB_CREATE)
-curs = database.cursor()
+# Defines cursors
+cda = da_db.cursor()
+cem = em_db.cursor()
+cte = te_db.cursor()
+cre = re_db.cursor()
+
+
+#### PART 2: MAIN PROGRAM ####
 
 
 # Output: Row Id | Subject field of all matching rows.
 
+view = 1 # 1: Brief output | 2: Full output
+
 while(True):
-    query = input("Query or q to exit: ")
-    if (query == "q" or query == "Q"):
-        break
+    os.system('cls' if os.name=='nt' else 'clear')
 
-    rec = curs.first()
-    while rec:
-        print(rec)
-        rec = curs.next()
+    #main_menu(view)
 
-curs.close()
-database.close()
+
+    txt = input("Query: ")
+    x = re.split(" |:", txt)
+    i = 0
+    len = len(x)
+    while(i < len):
+        if(x[i] == ""):
+            x.remove(x[i])
+            len = len-1
+            continue
+        i = i+1
+    print(x)
+    test = input(" ")
+
+
+    
+    # rec = cre.first()
+    # while rec:
+    #     print("1: \n")
+    #     print(rec)
+    #     print("\n")
+    #     rec = cre.next()
+    # break
+
+
+
+########## Function definitions #######################
+def mode_change(view):
+    while(True):
+        view = input("output=full or output=brief?")
+        if view == "output=full":
+            view = 2
+            break
+        elif view == "output=brief":
+            view = 1
+            break
+        print("Error, try again.")
+
+def main_menu(view):
+    while(True):
+        action = input("[1] Query\n[2] Mode change\n[3] Exit")
+        if action == 2:
+            mode_change(view)
+        elif action == 3:
+            print("Have a nice day!")
+            time.sleep(2)
+            exit()
+
+
+
+cda.close()
+cem.close()
+cte.close()
+cre.close()
+re_db.close()
+da_db.close()
+em_db.close()
+te_db.close()
