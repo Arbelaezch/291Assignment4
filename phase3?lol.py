@@ -51,16 +51,18 @@ cre = re_db.cursor()
 #### PART 2: MAIN PROGRAM ####
 
 
-# Output: Row Id | Subject field of all matching rows.
-
+# Brief Output: Row Id & Subject field of all matching rows.
+# Full Output: Displays full record.
 view = 1 # 1: Brief output | 2: Full output
 
 while(True):
     os.system('cls' if os.name=='nt' else 'clear')
 
+    # Has user choose whether to enter a query, change output display or exit.
     #main_menu(view)
 
 
+    # Splits up entered query into a list of each word entered.
     txt = input("Query: ")
     x = re.split(" |:", txt)
     i = 0
@@ -75,7 +77,7 @@ while(True):
     test = input(" ")
 
 
-    
+    # Test to print out all records in re (row id index file)
     # rec = cre.first()
     # while rec:
     #     print("1: \n")
