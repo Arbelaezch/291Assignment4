@@ -199,27 +199,34 @@ def process_query(query, filtered_indices):
 		return None
 
 def equality_search(pair, filtered_indices):
+	# todo: delete assertion to make things faster
 	assert len(pair) == 2
-	
-	arg1 = pair[0].lower()
-	arg2 = pair[1].lower()
-	
-	result_indices = set() # this is a set
-	if arg1 == "subj" or arg1 == "subject":
-		key = ("s-"+arg2).encode(UTF_8)
-		iter = cte.set(key)
-		while(iter != None and iter[0] == key):
-			# we're putting the string representation of the number here instead
-			# of the actual integer since we have to encode it later, which
-			# requires a string
-			# i don't know if turning it to int makes the set interesection faster
-			result_indices.add(iter[1].decode(UTF_8).split(":")[1])
 
-			dup = cte.next_dup()
-			while(dup != None):
-				result_indices.add(dup[1].decode(UTF_8).split(":")[1])
-				dup = cte.next_dup()
-			iter = cte.next()
+	# don't need to lower here because we already lowered the characters at the start
+	arg1 = pair[0]
+	arg2 = pair[1]
+	cursor = None
+	key = None
+	
+	if arg1 in ("subj", "subject"):
+		key = ("s-"+arg2).encode(UTF_8)
+		cursor = cte
+	elif arg1 == "body":
+		key = ("b-"+arg2).encode(UTF_8)
+		cursor = cte
+	elif arg1 in ("to", "from", "bcc", "cc"):
+		key = (arg1+"-"+arg2).encode(UTF_8)
+		cursor = cem
+	elif arg1 == "date":
+		key = arg2.encode(UTF_8)
+		cursor = cda
+
+	# todo: delete for faster queries
+	assert cursor != None
+	assert key != None
+
+	# result_indices is a set
+	result_indices = equality_search_helper(cursor, key)
 	
 	# for multiple searches
 	if filtered_indices == None:
@@ -229,6 +236,26 @@ def equality_search(pair, filtered_indices):
 		filtered_indices = filtered_indices & result_indices
 	
 	return filtered_indices
+
+'''
+Returns a set of row_ids (string) based on a given key and cursor
+'''
+def equality_search_helper(cursor, key):
+	result_indices = set()
+	iter = cursor.set(key)
+	while(iter != None and iter[0] == key):
+		# we're putting the string representation of the number here instead
+		# of the actual integer since we have to encode it later, which
+		# requires a string
+		# i don't know if turning it to int makes the set interesection faster
+		result_indices.add(iter[1].decode(UTF_8).split(":")[1])
+
+		dup = cursor.next_dup()
+		while(dup != None):
+			result_indices.add(dup[1].decode(UTF_8).split(":")[1])
+			dup = cursor.next_dup()
+		iter = cursor.next()
+	return result_indices
 # -------------------
 
 
