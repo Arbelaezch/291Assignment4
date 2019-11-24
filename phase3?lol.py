@@ -3,6 +3,12 @@ import time
 import os
 import re
 
+# region Constant Variables
+UTF_8 = "utf-8"
+OUTPUT_BRIEF = 0 # DEFAULT
+OUTPUT_FULL = 1
+# endregion
+
 #### PART 1: Creates 4 databases based on the 4 index files and initializes cursors to each database. ###########################################
 
 # Name of database files to be opened
@@ -156,54 +162,141 @@ def range_search():
 def complex_search():
 	exit()
 
-def output(view):
-	exit()
+def output(indices, output_type):
+	print("Output: ")
+	for index in indices:
+		print(cre.set(index.encode(UTF_8)))
+		# todo: fix format here
+	print("-"*20)
 
+# --------------------
+def process_query(query, filtered_indices):
+	# Test for range search
+	result = re.split(">=|<=|<|>", query)
+	if len(result) == 2:
+		# do range search
+		return None
+	elif len(result) > 2:
+		print("Wrong grammar")
+		return None
 
+	# Test for equality searches
+	result = query.split(":")
+	if len(result) == 2:
+		# do equality search
+		return equality_search(result, filtered_indices)
+	elif len(result) == 1:
+		# search on both subject and body
+		if query.find("%") != -1:
+			# do partial search
+			pass
+		else:
+			# do pure search
+			pass
+		return None
+	else:
+		print("Wrong grammar")
+		return None
+
+def equality_search(pair, filtered_indices):
+	assert len(pair) == 2
+	
+	arg1 = pair[0].lower()
+	arg2 = pair[1].lower()
+	
+	result_indices = set() # this is a set
+	if arg1 == "subj" or arg1 == "subject":
+		key = ("s-"+arg2).encode(UTF_8)
+		iter = cte.set(key)
+		while(iter != None and iter[0] == key):
+			# we're putting the string representation of the number here instead
+			# of the actual integer since we have to encode it later, which
+			# requires a string
+			# i don't know if turning it to int makes the set interesection faster
+			result_indices.add(iter[1].decode(UTF_8).split(":")[1])
+
+			dup = cte.next_dup()
+			while(dup != None):
+				result_indices.add(dup[1].decode(UTF_8).split(":")[1])
+				dup = cte.next_dup()
+			iter = cte.next()
+	
+	# for multiple searches
+	if filtered_indices == None:
+		filtered_indices = result_indices
+	else:
+		# set intersection here
+		filtered_indices = filtered_indices & result_indices
+	
+	return filtered_indices
+# -------------------
 
 
 
 ############ PART 3: MAIN PROGRAM ####################################################################
 # So i never put in an actual main() cuz none of the lab's did and I dont know if it affects anything, but if anyone feels like it be my guest.
+# switch which version of the code here works
+CODE_VER = 2
 
-while(True):
-	os.system('cls' if os.name=='nt' else 'clear')
+if CODE_VER == 2:
+	output_type = OUTPUT_BRIEF
 
-	# See function definition for description. Commented out to save time while testing.
-	#main_menu(view)
-
-
-	# The following code Splits up the entered query into a list of each word entered.
-	#***** CONSIDERS THAT THERE CAN BE ONLY ONE RANGED "DATE" CONDITION IN THE QUERY.
-	txt = input("Query: ")
-	x = re.split(" |:|>=|<=|<|>", txt)
-	i = 0
-	len = len(x)
-	while(i < len):
-		if x[i] == "":
-			x.remove(x[i])
-			len = len-1
+	while(True):
+		os.system('cls' if os.name=='nt' else 'clear')
+		
+		txt = input("Query: ").lower()
+		# todo: the output changes here
+		if (txt == "output=full"):
+			output_type = OUTPUT_FULL
 			continue
-		if x[i].lower() == "date":
-			if txt.find("<") != -1:
-				range = "<"
-			elif txt.find("<=") != -1:
-				range = "<="
-			elif txt.find(">") != -1:
-				range = ">"
-			elif txt.find(">=") != -1:
-				range = ">="
-		i = i+1
-		# print(x)
-		# test = input(" ")
-
-	# Checks if only 1 command given, if yes single condition search is initiated.
-	if len == 2 or len == 1:
-		single_search(x)
-		test = input(" ")
+		elif  (txt == "output=brief"):
+			output_type - OUTPUT_BRIEF
+			continue
+			
+		queries = txt.split()
+		filtered_indices = None
+		for query in queries:
+			filtered_indices = process_query(query, filtered_indices)
+		output(filtered_indices, output_type)
 		break
-	
+		
+elif CODE_VER == 1:
+	while(True):
+		os.system('cls' if os.name=='nt' else 'clear')
 
+		# See function definition for description. Commented out to save time while testing.
+		#main_menu(view)
+
+
+		# The following code Splits up the entered query into a list of each word entered.
+		#***** CONSIDERS THAT THERE CAN BE ONLY ONE RANGED "DATE" CONDITION IN THE QUERY.
+		txt = input("Query: ")
+		x = re.split(" |:|>=|<=|<|>", txt)
+		i = 0
+		len = len(x)
+		while(i < len):
+			if x[i] == "":
+				x.remove(x[i])
+				len = len-1
+				continue
+			if x[i].lower() == "date":
+				if txt.find("<") != -1:
+					range = "<"
+				elif txt.find("<=") != -1:
+					range = "<="
+				elif txt.find(">") != -1:
+					range = ">"
+				elif txt.find(">=") != -1:
+					range = ">="
+			i = i+1
+			# print(x)
+			# test = input(" ")
+
+		# Checks if only 1 command given, if yes single condition search is initiated.
+		if len == 2 or len == 1:
+			single_search(x)
+			test = input(" ")
+			break
 
 
 
