@@ -65,17 +65,30 @@ while(True):
     # Splits up entered query into a list of each word entered.
     # Should make it much easier to figure out wtf the user is asking.
     txt = input("Query: ")
-    x = re.split(" |:", txt)
-    i = 0
-    len = len(x)
-    while(i < len):
-        if(x[i] == ""):
-            x.remove(x[i])
-            len = len-1
-            continue
-        i = i+1
-    print(x)
-    test = input(" ")
+    lst = []        # List that contains list of words after splitting
+    if ' ' in txt:  # If input has any spaces
+        q = txt.lower()
+        if ":" in q:
+            lst.append(re.split("[:]", q))  # Split on : then add to list
+        elif ">" in q:
+            lst.append(re.split(">=?", q))  # Split on > and >= then add to list
+        elif "<" in q:
+            lst.append(re.split("<=?", q))  # Split on < and <= then add to list
+        else:    # Just one word
+            lst.append([q])
+    else:      # Input has no spaces
+        txt = txt.lower()
+        if ":" in txt:
+            lst.append(txt.split(':'))
+        elif ">" in txt:
+            lst.append(re.split(">=?", txt))
+        elif "<" in txt:
+            lst.append(re.split("<=?", txt))
+        else:
+            lst.append([txt])
+                
+    print(lst)
+    break
 
 
     # Test to print out all records in re (row id index file)
