@@ -67,15 +67,6 @@ range = "0" # 0 if date is exact, otherwise equals one of: >, <, >=, <=.
 
 
 
-	# Code to print out all records of index file "re.idx". Just used to test with.
-	# rec = cre.first()
-	# while rec:
-	#	  print("1: \n")
-	#	  print(rec)
-	#	  print("\n")
-	#	  rec = cre.next()
-	# break
-
 
 ########## PART 2: FUNCTION DEFINITIONS #######################
 def mode_change(view):
@@ -162,14 +153,31 @@ def range_search():
 def complex_search():
 	exit()
 
+# So far I have the output format working for when output=brief - Levi
 def output(indices, output_type):
 	print("Output: ")
+	rows = []
+	subjects = []
 	for index in indices:
-		print(cre.set(index.encode(UTF_8)))
-		# todo: fix format here
+		index = cre.set(index.encode(UTF_8))
+		for i in index:
+			string = str(i)
+			if output_type == OUTPUT_BRIEF:
+				r = re.split("<row>", string)
+				if len(r) > 1:
+					r = re.split("</row>", r[1])
+					rows.append(r[0])
+				s = re.split("<subj>", string)
+				if len(s) > 1:
+					s = re.split("</subj>", s[1])
+					subjects.append(s[0])
+	i = 0
+	while (i < len(rows)):	
+		print("Row: " + "%5s" % rows[i] + "   |   Subject: " + subjects[i] + "\n")
+		i += 1
+	# todo: add output formatting for output=full
 	print("-"*20)
 
-# --------------------
 def process_query(query, filtered_indices):
 	# Test for range search
 	result = re.split(">=|<=|<|>", query)
@@ -262,8 +270,6 @@ def equality_search_helper(cursor, key):
 
 
 ############ PART 3: MAIN PROGRAM ####################################################################
-# So i never put in an actual main() cuz none of the lab's did and I dont know if it affects anything, but if anyone feels like it be my guest.
-# switch which version of the code here works
 CODE_VER = 2
 
 if CODE_VER == 2:
