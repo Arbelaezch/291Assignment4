@@ -153,6 +153,7 @@ def range_search():
 def complex_search():
 	exit()
 
+<<<<<<< HEAD:phase3.py
 # So far I have the output format working for when output=brief - Levi
 def output(indices, output_type):
 	print("Output: ")
@@ -176,6 +177,13 @@ def output(indices, output_type):
 		print("Row: " + "%5s" % rows[i] + "   |   Subject: " + subjects[i] + "\n")
 		i += 1
 	# todo: add output formatting for output=full
+=======
+def output(indices, output_type):
+	print("Output: ")
+	for index in indices:
+		print(cre.set(index.encode(UTF_8)))
+		# todo: fix format here
+>>>>>>> 87274e72d51b2e344c678a7add54da9792db8890:phase3?lol.py
 	print("-"*20)
 
 # --------------------
