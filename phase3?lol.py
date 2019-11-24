@@ -203,8 +203,8 @@ def equality_search(pair, filtered_indices):
 	assert len(pair) == 2
 
 	# don't need to lower here because we already lowered the characters at the start
-	arg1 = pair[0]
-	arg2 = pair[1]
+	arg1 = pair[0].strip()
+	arg2 = pair[1].strip()
 	cursor = None
 	key = None
 	
@@ -241,13 +241,14 @@ def equality_search(pair, filtered_indices):
 Returns a set of row_ids (string) based on a given key and cursor
 '''
 def equality_search_helper(cursor, key):
+	# todo: handle cases where key has % here
 	result_indices = set()
 	iter = cursor.set(key)
 	while(iter != None and iter[0] == key):
 		# we're putting the string representation of the number here instead
 		# of the actual integer since we have to encode it later, which
 		# requires a string
-		# i don't know if turning it to int makes the set interesection faster
+		# i don't know if turning it to int makes the set interesection faster, though
 		result_indices.add(iter[1].decode(UTF_8).split(":")[1])
 
 		dup = cursor.next_dup()
@@ -269,6 +270,7 @@ if CODE_VER == 2:
 	output_type = OUTPUT_BRIEF
 
 	while(True):
+		# todo handle the special cases with many whitespaces here (clean input)
 		os.system('cls' if os.name=='nt' else 'clear')
 		
 		txt = input("Query: ").lower()
