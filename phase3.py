@@ -67,15 +67,6 @@ range = "0" # 0 if date is exact, otherwise equals one of: >, <, >=, <=.
 
 
 
-	# Code to print out all records of index file "re.idx". Just used to test with.
-	# rec = cre.first()
-	# while rec:
-	#	  print("1: \n")
-	#	  print(rec)
-	#	  print("\n")
-	#	  rec = cre.next()
-	# break
-
 
 ########## PART 2: FUNCTION DEFINITIONS #######################
 def mode_change(view):
@@ -261,8 +252,6 @@ def equality_search_helper(cursor, key):
 
 
 ############ PART 3: MAIN PROGRAM ####################################################################
-# So i never put in an actual main() cuz none of the lab's did and I dont know if it affects anything, but if anyone feels like it be my guest.
-# switch which version of the code here works
 CODE_VER = 2
 
 if CODE_VER == 2:
