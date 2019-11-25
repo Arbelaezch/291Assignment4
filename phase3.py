@@ -98,67 +98,6 @@ def main_menu():
             time.sleep(2)
 
 
-# I am basing the following function definitions off of the marking rubric functionality list from eclass.
-
-# single_search(): Search when only a single condition present, could possibly find a way to call back to this function when multiple conditions present.
-# PROBLEM: For some reason
-# def single_search(x):
-# 	row = []
-# 	i = 0
-
-# 	# I have been testing this fn with the command: "subj:can" which should output all records with the term "can" in it
-# 	if(True):
-# 		term1 = x[0]
-# 		term2 = x[1].encode("utf-8") # encodes second term
-# 		term1 = term1.lower()
-# 		print(term1) # tests inputted first term
-# 		print(term2) # tests inputted second term; shows: b'can'
-
-# 		rec = cte.set(term2.encode("utf-8")) # DOES NOT FIND ANYTHING; SOMETHING WRONG WITH MATCHING
-# 		print(rec[0].decode("utf-8")) # THE ENCODED SECOND TERM DOES NOT MATCH THE KEY IN THE INDEX FILE
-
-# 		if term1 == "subj" or term1 == "subject" or term1 == "body":
-# 			result = cte.set(term2.encode("utf-8"))
-# 			print(result)
-# 			print(result.decode("utf-8"))
-# 			print(result)
-
-# 			if result != None:
-# 				row[i] = result[1].decode("utf-8")
-# 				i += 1
-
-# 				dup = cte.next_dup()
-# 				while(dup != None):
-# 					row[i] = dup[1].decode("utf-8")
-# 					dup = cte.next_dup()
-# 					i += 1
-# 			j = 0
-# 			while(j < i):
-# 				result = cre.set(row[j].encode("utf-8"))
-# 				print(result.decode("utf-8"))
-# 				j += 1
-
-# 		elif term1 == "date":
-# 			range_search(query,filtered_indices)
-# 		elif term1 == "from" or term1 == "to" or term1 == "cc" or term1 == "bcc":
-# 			result = cem.set(term2.encode("utf-8"))
-# 		elif term1.find("%") != -1:
-# 			partial_search(query,filtered_indices)
-
-
-# def multiple_search():
-# 	exit()
-
-# def range_search():
-#         exit()
-
-# def complex_search():
-#         exit()
-"""
-    Returns a set of row_ids (string) based on a given key and cursor
-"""
-
-
 def partial_search(cursor, key):
     result_indices = set()
     iter = cursor.set_range(key)
@@ -249,43 +188,68 @@ def output(indices, output_type):
             print("-"*50)
             i += 1
 
-
+# range_search(): Returns the row IDs of emails that match the date query.
 def range_search(query):
     cursor = cda
     result = re.split(">=|<=|<|>", query)
-    arg1 = result[0].strip()
     arg2 = result[1].strip()
-    key = arg2.encode(UTF_8)
     result_indices = set()
 
     date = set()
 
     # >=
     if query.find(">=") != -1:
-        itera = cursor.set(key)
-        print("wrong way")
-        exit()
-    # <=
-    elif query.find("<=") != -1:
-        print("wrong way")
-        exit()
-    # >
-    elif query.find(">") != -1:
-        itera = cursor.set(key)
+        itera = cursor.last()
         if itera == None:
             return set()
-        
-        dup = cursor.next()
-        while(True):
-            if itera[0] == dup[0]:
-                itera = dup
-                dup = cursor.next()
-            else:
-                itera = dup
+
+        date = itera[0].decode(UTF_8).split(":")[0]
+
+        while(date >= arg2):
+            # print(itera[0])
+
+            stuff = itera[1].decode(UTF_8).split(":")[1]
+            result_indices.add(stuff)
+            itera = cursor.prev()
+            if itera == None:
                 break
-        while(itera != None):
-            result_indices.add(itera[1].decode(UTF_8).split(":")[1])
+            date = itera[1].decode(UTF_8).split(":")[0]
+        return result_indices
+    # <=
+    elif query.find("<=") != -1:
+        itera = cursor.first()
+        if itera == None:
+            return set()
+
+        date = itera[0].decode(UTF_8).split(":")[0]
+
+        while(date <= arg2):
+            # print(itera[0])
+
+            stuff = itera[1].decode(UTF_8).split(":")[1]
+            result_indices.add(stuff)
             itera = cursor.next()
+            if itera == None:
+                break
+            date = itera[1].decode(UTF_8).split(":")[0]
+        return result_indices
+    # >
+    elif query.find(">") != -1:
+        itera = cursor.last()
+        if itera == None:
+            return set()
+
+        date = itera[0].decode(UTF_8).split(":")[0]
+
+        while(date > arg2):
+            # print(itera[0])
+
+            stuff = itera[1].decode(UTF_8).split(":")[1]
+            result_indices.add(stuff)
+            itera = cursor.prev()
+            if itera == None:
+                break
+            date = itera[1].decode(UTF_8).split(":")[0]
         return result_indices
     # <
     elif query.find("<") != -1:
@@ -304,7 +268,6 @@ def range_search(query):
             if itera == None:
                 break
             date = itera[1].decode(UTF_8).split(":")[0]
-
         return result_indices
 
 
