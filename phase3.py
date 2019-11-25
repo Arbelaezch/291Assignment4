@@ -408,9 +408,15 @@ if CODE_VER == 2:
 							ind += 3
 							current_query = ""
 							continue
-						continue
 					else:
-						pass
+						# delimiter is before last term and has other characters in
+						debug_print("Case 3.1.4")
+						current_query += next_term
+						if is_query_valid(current_query):
+							queries.append(current_query)
+							ind += 2
+							current_query = ""
+							continue
 				elif is_query_valid(current_query):
 					debug_print("Case 3.2: " + current_query)
 					# there is no more terms left
