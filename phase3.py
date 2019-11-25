@@ -180,14 +180,6 @@ def partial_search(cursor, key):
 
 
 def output(indices, output_type):
-
-    # check if none in result indices
-    for ind in indices:
-        if ind == None:
-            print("Okie dokie")
-        else:
-            print(ind)
-
     print("Output: \n")
     rows = []
     subjects = []
