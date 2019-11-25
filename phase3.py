@@ -10,6 +10,11 @@ VIEW_BRIEF = 1  # DEFAULT
 VIEW_FULL = 2
 WILDCARD_CHAR = "%"
 DELIMITERS = (":", "<", ">", "<=", ">=", "%")
+
+# reference: docs.python.org/3/howto/regex.html
+date_pattern = re.compile("^date(>\=|<\=|:|>|<)\d{4}/\d{2}/\d{2}$")
+email_pattern = re.compile("^(from|to|cc|bcc):(\w|\.)+@(\w|\.)+$")
+term_pattern = re.compile("^(subj:|subject:|body:)?[\w]+[%]?$")
 # endregion
 
 #### PART 1: Creates 4 databases based on the 4 index files and initializes cursors to each database. ###########################################
@@ -98,62 +103,6 @@ def main_menu():
             time.sleep(2)
 
 
-# I am basing the following function definitions off of the marking rubric functionality list from eclass.
-
-# single_search(): Search when only a single condition present, could possibly find a way to call back to this function when multiple conditions present.
-# PROBLEM: For some reason
-# def single_search(x):
-# 	row = []
-# 	i = 0
-
-# 	# I have been testing this fn with the command: "subj:can" which should output all records with the term "can" in it
-# 	if(True):
-# 		term1 = x[0]
-# 		term2 = x[1].encode("utf-8") # encodes second term
-# 		term1 = term1.lower()
-# 		print(term1) # tests inputted first term
-# 		print(term2) # tests inputted second term; shows: b'can'
-
-# 		rec = cte.set(term2.encode("utf-8")) # DOES NOT FIND ANYTHING; SOMETHING WRONG WITH MATCHING
-# 		print(rec[0].decode("utf-8")) # THE ENCODED SECOND TERM DOES NOT MATCH THE KEY IN THE INDEX FILE
-
-# 		if term1 == "subj" or term1 == "subject" or term1 == "body":
-# 			result = cte.set(term2.encode("utf-8"))
-# 			print(result)
-# 			print(result.decode("utf-8"))
-# 			print(result)
-
-# 			if result != None:
-# 				row[i] = result[1].decode("utf-8")
-# 				i += 1
-
-# 				dup = cte.next_dup()
-# 				while(dup != None):
-# 					row[i] = dup[1].decode("utf-8")
-# 					dup = cte.next_dup()
-# 					i += 1
-# 			j = 0
-# 			while(j < i):
-# 				result = cre.set(row[j].encode("utf-8"))
-# 				print(result.decode("utf-8"))
-# 				j += 1
-
-# 		elif term1 == "date":
-# 			range_search(query,filtered_indices)
-# 		elif term1 == "from" or term1 == "to" or term1 == "cc" or term1 == "bcc":
-# 			result = cem.set(term2.encode("utf-8"))
-# 		elif term1.find("%") != -1:
-# 			partial_search(query,filtered_indices)
-
-
-# def multiple_search():
-# 	exit()
-
-# def range_search():
-#         exit()
-
-# def complex_search():
-#         exit()
 """
     Returns a set of row_ids (string) based on a given key and cursor
 """
@@ -274,7 +223,7 @@ def range_search(query):
         itera = cursor.set(key)
         if itera == None:
             return set()
-        
+
         dup = cursor.next()
         while(True):
             if itera[0] == dup[0]:
@@ -350,7 +299,6 @@ def process_query(query, filtered_indices):
             indices = process_query("date:" + result[1], filtered_indices)
             # todo: ranged search here
 
-
         if filtered_indices == None:
             return indices
         else:
@@ -358,7 +306,7 @@ def process_query(query, filtered_indices):
     elif len(result) > 2:
         print("Grammatical error")
         return None
-    
+
     # Test for equality searches
     result = query.split(":")
     if len(result) == 2:
@@ -466,12 +414,6 @@ def check_delimiter(text):
         if val != -1:
             return val
     return -1
-
-
-# reference: docs.python.org/3/howto/regex.html
-date_pattern = re.compile("^date(>\=|<\=|:|>|<)\d{4}/\d{2}/\d{2}$")
-email_pattern = re.compile("^(from|to|cc|bcc):(\w|\.)+@(\w|\.)+$")
-term_pattern = re.compile("^(subj:|subject:|body:)?[\w]+[%]?$")
 
 """
     Checks if current query is valid based on query language grammar
@@ -641,7 +583,7 @@ def entering_command():
         if filtered_indices == None:
             # an error happened somewhere
             return
-    
+
     if filtered_indices != None:
         output(filtered_indices, view)
     else:
@@ -650,70 +592,20 @@ def entering_command():
 def main():
     main_menu()
 
+
 def clear_screen(title):
-    os.system('cls' if os.name=='nt' else 'clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
     if title != None:
         print_title(title)
+
 
 def print_title(title):
     print("-" * 20)
     print(title)
     print("-" * 20)
-    
 
 ############ PART 3: MAIN PROGRAM ####################################################################
-CODE_VER = 2
-
-if CODE_VER == 2:
-    main_menu()
-        
-elif CODE_VER == 1:
-    while(True):
-        os.system('cls' if os.name=='nt' else 'clear')
-
-        # See function definition for description. Commented out to save time while testing.
-        # main_menu(view)
-
-
-        # The following code Splits up the entered query into a list of each word entered.
-        # ***** CONSIDERS THAT THERE CAN BE ONLY ONE RANGED "DATE" CONDITION IN THE QUERY.
-        txt = input("Query: ")
-        x = re.split(" |:|>=|<=|<|>", txt)
-        i = 0
-        len = len(x)
-        while(i < len):
-            if x[i] == "":
-                x.remove(x[i])
-                len = len-1
-                continue
-            if x[i].lower() == "date":
-                if txt.find("<") != -1:
-                    range = "<"
-                elif txt.find("<=") != -1:
-                    range = "<="
-                elif txt.find(">") != -1:
-                    range = ">"
-                elif txt.find(">=") != -1:
-                    range = ">="
-            i = i+1
-            # print(x)
-            # test = input(" ")
-
-        # Checks if only 1 command given, if yes single condition search is initiated.
-        if len == 2 or len == 1:
-            single_search(x)
-            test = input(" ")
-            break
-
-
-
-
-
-
-
-
-
-
+main_menu()
 
 cda.close()
 cem.close()
