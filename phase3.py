@@ -359,7 +359,7 @@ def is_query_valid(query):
 	is_valid |= term_pattern.match(query) != None
 	return is_valid
 
-DEBUG = False
+DEBUG = True
 
 def debug_print(message):
 	if DEBUG: print(message)
@@ -390,7 +390,7 @@ if CODE_VER == 2:
 		while ind < list_len:
 			curr_text = text_list[ind]
 			current_query += curr_text
-			delim_ind = check_delimiter(curr_text)
+			delim_ind = check_delimiter(current_query)
 
 			# the delimiter is at last
 			if delim_ind == len(current_query) - 1:
@@ -412,14 +412,15 @@ if CODE_VER == 2:
 					ind += 1
 					continue
 			elif delim_ind != -1:
-				debug_print("Case 2: " + current_query)
 				# delimiter is in between
+				debug_print("Case 2: " + current_query)
 				if is_query_valid(current_query):
 					queries.append(current_query)
 					ind += 1
 					current_query = ""
 					continue
 			else:
+				# there is no delimiter in current text
 				debug_print("Case 3: " + current_query)
 				if ind + 1 < list_len:
 					debug_print("Case 3.1: " + current_query)
@@ -455,11 +456,21 @@ if CODE_VER == 2:
 							continue
 					else:
 						# delimiter is before last term and has other characters in
-						debug_print("Case 3.1.4")
-						current_query += next_term
+						# SPECIAL CASE
+						debug_print("Case 3.1.4:")
+
+						# if first part contains special keywords then we don't add next term
+						first_part = re.split(" |:|>=|<=|<|>", next_term)[0]
+						if first_part in ("body", "subj", "subject", "cc", "bcc", "date", "from", "to"):
+							debug_print("Case 3.1.4.1: " + current_query)
+							ind += 1
+						else:
+							current_query += next_term
+							debug_print("Case 3.1.4.2: " + current_query)
+							ind += 2
+						
 						if is_query_valid(current_query):
 							queries.append(current_query)
-							ind += 2
 							current_query = ""
 							continue
 				elif is_query_valid(current_query):
