@@ -248,9 +248,6 @@ def equality_search(pair, filtered_indices):
 	
 	return filtered_indices
 
-def partial_compare(val1, val2):
-	return False
-
 '''
 Returns a set of row_ids (string) based on a given key and cursor
 '''
