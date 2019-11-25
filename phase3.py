@@ -142,12 +142,15 @@ def single_search(x):
 			partial_search()
 
 			
-	
 def multiple_search():
 	exit()
 
-<<<<<<< HEAD
-=======
+def range_search():
+        exit()
+
+def complex_search():
+        exit()
+
 '''
 Returns a set of row_ids (string) based on a given key and cursor
 '''
@@ -169,22 +172,9 @@ def partial_search(cursor, key):
 		iter = cursor.next()
 	return result_indices
 
->>>>>>> 5def218bf67949edb4055df60f91a07f9a7577af
-def range_search():
-	exit()
-
-def complex_search():
-	exit()
-
-<<<<<<< HEAD
 # Not sure if we are supposed to filter out the weird characters like &#10
 def output(indices, output_type):
 	print("Output: \n")
-=======
-# So far I have the output format working for when output=brief - Levi
-def output(indices, view):
-	print("Output: ")
->>>>>>> 5def218bf67949edb4055df60f91a07f9a7577af
 	rows = []
 	subjects = []
 	dates = []
@@ -197,7 +187,6 @@ def output(indices, view):
 		index = cre.set(index.encode(UTF_8))
 		for i in index:
 			string = str(i)
-<<<<<<< HEAD
 			
 			r = re.split("<row>", string)
 			if len(r) > 1:
@@ -207,7 +196,7 @@ def output(indices, view):
 			if len(s) > 1:
 				s = re.split("</subj>", s[1])
 				subjects.append(s[0])
-			if output_type == OUTPUT_FULL:
+			if output_type == VIEW_FULL:
 				d = re.split("<date>", string)
 				if len(d) > 1:
 					d = re.split("</date>", d[1])
@@ -233,14 +222,14 @@ def output(indices, view):
 					b = re.split("</body>", b[1])
 					body.append(b[0])
 
-	if output_type == OUTPUT_BRIEF:
+	if output_type == VIEW_BRIEF:
 		i = 0
 		while (i < len(rows)):	
 			print("Row: " + rows[i])
 			print("Subject: " + subjects[i])
 			print("-"*50)
 			i += 1
-	elif output_type == OUTPUT_FULL:
+	elif output_type == VIEW_FULL:
 		i = 0
 		while (i < len(rows)):
 			print("Row: " + rows[i] + "\n")
@@ -253,23 +242,6 @@ def output(indices, view):
 			print("body: " + body[i] + "\n")	
 			print("-"*50)
 			i += 1
-=======
-			if view == VIEW_BRIEF:
-				r = re.split("<row>", string)
-				if len(r) > 1:
-					r = re.split("</row>", r[1])
-					rows.append(r[0])
-				s = re.split("<subj>", string)
-				if len(s) > 1:
-					s = re.split("</subj>", s[1])
-					subjects.append(s[0])
-	i = 0
-	while (i < len(rows)):	
-		print("Row: " + "%5s" % rows[i] + "   |   Subject: " + subjects[i] + "\n")
-		i += 1
-	# todo: add output formatting for output=full
-	print("-"*20)
->>>>>>> 5def218bf67949edb4055df60f91a07f9a7577af
 
 def process_query(query, filtered_indices):
 	# Test for range search
