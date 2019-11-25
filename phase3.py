@@ -4,7 +4,7 @@ import os
 import re
 
 # region Constant Variables
-DEBUG = True
+DEBUG = False
 UTF_8 = "utf-8"
 VIEW_BRIEF = 1 # DEFAULT
 VIEW_FULL = 2
@@ -84,15 +84,21 @@ def mode_change(view):
 		print("Error, try again.")
 
 # Has user choose whether to enter a query, change output display or exit.
-def main_menu(view):
+def main_menu():
 	while(True):
-		action = input("[1] Query\n[2] Mode change\n[3] Exit")
-		if action == 2:
-			mode_change(view)
-		elif action == 3:
+		print_title("Main menu")
+		action = input("[1] Enter a command\n[2] Exit\nInput: ").strip()
+		if action == "1":
+			entering_command()
+		elif action == "2":
 			print("Have a nice day!")
 			time.sleep(2)
-			exit()
+			# we need the break here so we could close the database
+			break
+		else:
+			print("Invalid input")
+			time.sleep(2)
+
 
 
 ### I am basing the following function definitions off of the marking rubric functionality list from eclass.
@@ -158,7 +164,7 @@ def complex_search():
 def partial_search(cursor, key):
 	result_indices = set()
 	iter = cursor.set_range(key)
-	while(iter != None and iter[0].find(key) != -1):
+	while(iter != None and iter[0].find(key) == 0):
 		# we're putting the string representation of the number here instead
 		# of the actual integer since we have to encode it later, which
 		# requires a string
@@ -492,43 +498,67 @@ def cleanup_input(txt):
 
 	return queries
 
+def entering_command():
+	global view
+
+	clear_screen("Entering a command")
+	
+	if view == VIEW_FULL:
+		print("View type: FULL")
+	else:
+		print("View type: BRIEF")
+
+	txt = input("Command: ").lower()
+	
+	if (txt == "output=full"):
+		view = VIEW_FULL
+		print("Changing output to full...")
+		entering_command()
+		return
+	elif  (txt == "output=brief"):
+		view = VIEW_BRIEF
+		print("Changing output to full...")
+		entering_command()
+		return
+	
+	queries = cleanup_input(txt)
+	
+	if queries == None:
+		return
+
+	filtered_indices = None
+	debug_print(queries)
+	
+	for query in queries:
+		filtered_indices = process_query(query, filtered_indices)
+		if filtered_indices == None:
+			# an error happened somewhere
+			return
+	
+	if filtered_indices != None:
+		output(filtered_indices, view)
+	else:
+		print("No matching output.")
+
+def main():
+	main_menu()
+
+def clear_screen(title):
+	os.system('cls' if os.name=='nt' else 'clear')
+	if title != None:
+		print_title(title)
+
+def print_title(title):
+	print("-" * 20)
+	print(title)
+	print("-" * 20)
+	
+
 ############ PART 3: MAIN PROGRAM ####################################################################
 CODE_VER = 2
 
 if CODE_VER == 2:
-	while(True):
-		os.system('cls' if os.name=='nt' else 'clear')
-		
-		txt = input("Query: ").lower()
-		
-		if (txt == "output=full"):
-			view = VIEW_FULL
-			continue
-		elif  (txt == "output=brief"):
-			view = VIEW_BRIEF
-			continue
-		
-		queries = cleanup_input(txt)
-		
-		if queries == None:
-			break
-
-		filtered_indices = None
-		debug_print(queries)
-		
-		for query in queries:
-			filtered_indices = process_query(query, filtered_indices)
-			if filtered_indices == None:
-				# an error happened somewhere
-				break
-		
-		if filtered_indices != None:
-			output(filtered_indices, view)
-		else:
-			print("No matching output.")
-		
-		# todo: do we loop the program???
-		break
+	main_menu()
 		
 elif CODE_VER == 1:
 	while(True):
