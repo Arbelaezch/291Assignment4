@@ -146,39 +146,82 @@ def single_search(x):
 def multiple_search():
 	exit()
 
-def partial_search():
-	exit()
-
 def range_search():
 	exit()
 
 def complex_search():
 	exit()
 
-# So far I have the output format working for when output=brief - Levi
+# Not sure if we are supposed to filter out the weird characters like &#10
 def output(indices, output_type):
-	print("Output: ")
+	print("Output: \n")
 	rows = []
 	subjects = []
+	dates = []
+	froms = []
+	to = []
+	cc = []
+	bcc = []
+	body = []		
 	for index in indices:
 		index = cre.set(index.encode(UTF_8))
 		for i in index:
 			string = str(i)
-			if output_type == OUTPUT_BRIEF:
-				r = re.split("<row>", string)
-				if len(r) > 1:
-					r = re.split("</row>", r[1])
-					rows.append(r[0])
-				s = re.split("<subj>", string)
-				if len(s) > 1:
-					s = re.split("</subj>", s[1])
-					subjects.append(s[0])
-	i = 0
-	while (i < len(rows)):	
-		print("Row: " + "%5s" % rows[i] + "   |   Subject: " + subjects[i] + "\n")
-		i += 1
-	# todo: add output formatting for output=full
-	print("-"*20)
+			
+			r = re.split("<row>", string)
+			if len(r) > 1:
+				r = re.split("</row>", r[1])
+				rows.append(r[0])
+			s = re.split("<subj>", string)
+			if len(s) > 1:
+				s = re.split("</subj>", s[1])
+				subjects.append(s[0])
+			if output_type == OUTPUT_FULL:
+				d = re.split("<date>", string)
+				if len(d) > 1:
+					d = re.split("</date>", d[1])
+					dates.append(d[0])
+				f = re.split("<from>", string)
+				if len(f) > 1:
+					f = re.split("</from>", f[1])
+					froms.append(f[0])
+				t = re.split("<to>", string)
+				if len(t) > 1:
+					t = re.split("</to>", t[1])
+					to.append(t[0])
+				c = re.split("<cc>", string)
+				if len(c) > 1:
+					c = re.split("</cc>", c[1])
+					cc.append(c[0])
+				bc = re.split("<bcc>", string)
+				if len(bc) > 1:
+					bc = re.split("</bcc>", bc[1])
+					bcc.append(bc[0])
+				b = re.split("<body>", string)
+				if len(b) > 1:
+					b = re.split("</body>", b[1])
+					body.append(b[0])
+
+	if output_type == OUTPUT_BRIEF:
+		i = 0
+		while (i < len(rows)):	
+			print("Row: " + rows[i])
+			print("Subject: " + subjects[i])
+			print("-"*50)
+			i += 1
+	elif output_type == OUTPUT_FULL:
+		i = 0
+		while (i < len(rows)):
+			print("Row: " + rows[i] + "\n")
+			print("Date: " + dates[i] + "\n")
+			print("From: " + froms[i] + "\n")
+			print("To: " + to[i] + "\n")
+			print("Subject: " + subjects[i] + "\n")
+			print("cc: " + cc[i] + "\n")
+			print("bcc: " + bcc[i] + "\n")
+			print("body: " + body[i] + "\n")	
+			print("-"*50)
+			i += 1
 
 def process_query(query, filtered_indices):
 	# Test for range search
