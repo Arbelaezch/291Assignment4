@@ -151,11 +151,10 @@ def range_search():
 def complex_search():
         exit()
 
-'''
-Returns a set of row_ids (string) based on a given key and cursor
-'''
+"""
+	Returns a set of row_ids (string) based on a given key and cursor
+"""
 def partial_search(cursor, key):
-	# todo: handle cases where key has % here
 	result_indices = set()
 	iter = cursor.set_range(key)
 	while(iter != None and iter[0].find(key) != -1):
@@ -243,6 +242,11 @@ def output(indices, output_type):
 			print("-"*50)
 			i += 1
 
+"""
+	Processes the proper queries and does the appropriate kind of search
+	This function returns None if a grammatical error was found
+	Grammatical errors include having more than one delimiter in the query
+"""
 def process_query(query, filtered_indices):
 	# Test for range search
 	result = re.split(">=|<=|<|>", query)
@@ -274,6 +278,13 @@ def process_query(query, filtered_indices):
 		print("Grammatical error")
 		return None
 
+"""
+	Does equality search and partial search for email queries, term queries,
+	and equality date queries
+	If filtered indices is None, returns the resulting row ids from search
+	If filtered indices is a set, returns the intersection between filtered_indices
+		and the resulting row ids from search
+"""
 def equality_search(pair, filtered_indices):
 	# todo: delete assertion to make things faster
 	assert len(pair) == 2
@@ -320,9 +331,9 @@ def equality_search(pair, filtered_indices):
 	
 	return filtered_indices
 
-'''
-Returns a set of row_ids (string) based on a given key and cursor
-'''
+"""
+	Returns a set of row_ids (string) based on a given key and cursor
+"""
 def equality_search_helper(cursor, key):
 	# todo: handle cases where key has % here
 	result_indices = set()
@@ -341,6 +352,9 @@ def equality_search_helper(cursor, key):
 		iter = cursor.next()
 	return result_indices
 
+"""
+	Checks if there's a delimiter in the given text
+"""
 def check_delimiter(text):
 	for delim in DELIMITERS:
 		val = text.find(delim)
@@ -353,6 +367,9 @@ date_pattern = re.compile("^date(>\=|<\=|:|>|<)\d{4}/\d{2}/\d{2}$")
 email_pattern = re.compile("^(from|to|cc|bcc):(\w|\.)+@(\w|\.)+$")
 term_pattern = re.compile("^(subj:|subject:|body:)?[\w]+[%]?$")
 
+"""
+	Checks if current query is valid based on query language grammar
+"""
 def is_query_valid(query):
 	is_valid = date_pattern.match(query) != None
 	is_valid |= email_pattern.match(query) != None
@@ -387,6 +404,11 @@ if CODE_VER == 2:
 		list_len = len(text_list)
 		is_valid = True
 		current_query = ""
+		
+		"""
+			This while-loop cleans up the input queries
+			It divides up the input into single queries that process query can understand
+		"""
 		while ind < list_len:
 			curr_text = text_list[ind]
 			current_query += curr_text
