@@ -185,22 +185,33 @@ def process_query(query, filtered_indices):
 	result = re.split(">=|<=|<|>", query)
 	if len(result) == 2:
 		# do range search
-		return None
+		indices = {}
+
+		print(query)
+		if result[0].find("=") != -1:
+			process_query("date:" + result[1], filtered_indices)
+		# todo: ranged search here
+
+		return indices & filtered_indices
 	elif len(result) > 2:
-		print("Wrong grammar")
+		print("Grammatical error")
 		return None
 
 	# Test for equality searches
 	result = query.split(":")
 	if len(result) == 2:
-		# do equality search
 		return equality_search(result, filtered_indices)
 	elif len(result) == 1:
 		# search on both subject and body
-		result1 = process_query("subj:" + query, filtered_indices)
-		return result1 | process_query("body:" + query, filtered_indices)
+		result1 = process_query("subj:" + query, None)
+		result1 |= process_query("body:" + query, None)
+		print(filtered_indices)
+		if filtered_indices != None:
+			result1 &= filtered_indices
+		print(result1)
+		return result1
 	else:
-		print("Wrong grammar")
+		print("Grammatical error")
 		return None
 
 def equality_search(pair, filtered_indices):
@@ -330,11 +341,11 @@ if CODE_VER == 2:
 			output_type = OUTPUT_BRIEF
 			continue
 		
-		# todo handle the special cases with many whitespaces here (clean input)
 		queries = []
 		ind = 0
 		text_list = txt.split()
 		list_len = len(text_list)
+		is_valid = True
 		while ind < list_len:
 			if ind + 2 < list_len:
 				test_query = text_list[ind] + text_list[ind + 1] + text_list[ind + 2]
@@ -356,18 +367,28 @@ if CODE_VER == 2:
 				ind += 1
 				continue
 			else:
+				is_valid = False
 				print("Grammatical error near " + test_query)
+				break
+		
+		if not is_valid:
+			continue
 
 		filtered_indices = None
 		
 		for query in queries:
-			# print("current query: " + query)
+			print(query)
 			filtered_indices = process_query(query, filtered_indices)
+			if filtered_indices == None:
+				# an error happened somewhere
+				break
 		
 		if filtered_indices != None:
 			output(filtered_indices, output_type)
 		else:
 			print("Sorry :(")
+		
+		# todo: do we loop the program???
 		break
 		
 elif CODE_VER == 1:
