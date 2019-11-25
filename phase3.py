@@ -5,8 +5,8 @@ import re
 
 # region Constant Variables
 UTF_8 = "utf-8"
-OUTPUT_BRIEF = 0 # DEFAULT
-OUTPUT_FULL = 1
+VIEW_BRIEF = 1 # DEFAULT
+VIEW_FULL = 2
 WILDCARD_CHAR = "%"
 DELIMITERS = (":", "<", ">", "<=", ">=", "%")
 # endregion
@@ -62,7 +62,7 @@ cre = re_db.cursor()
 
 # Brief Output: Row Id & Subject field of all matching rows.
 # Full Output: Displays full record.
-view = 1 # 1: Brief output | 2: Full output
+view = VIEW_BRIEF # 1: Brief output | 2: Full output
 
 range = "0" # 0 if date is exact, otherwise equals one of: >, <, >=, <=.
 
@@ -75,10 +75,10 @@ def mode_change(view):
 	while(True):
 		view = input("output=full or output=brief?")
 		if view == "output=full":
-			view = 2
+			view = VIEW_FULL
 			break
 		elif view == "output=brief":
-			view = 1
+			view = VIEW_BRIEF
 			break
 		print("Error, try again.")
 
@@ -146,15 +146,45 @@ def single_search(x):
 def multiple_search():
 	exit()
 
+<<<<<<< HEAD
+=======
+'''
+Returns a set of row_ids (string) based on a given key and cursor
+'''
+def partial_search(cursor, key):
+	# todo: handle cases where key has % here
+	result_indices = set()
+	iter = cursor.set_range(key)
+	while(iter != None and iter[0].find(key) != -1):
+		# we're putting the string representation of the number here instead
+		# of the actual integer since we have to encode it later, which
+		# requires a string
+		# i don't know if turning it to int makes the set interesection faster, though
+		result_indices.add(iter[1].decode(UTF_8).split(":")[1])
+
+		dup = cursor.next_dup()
+		while(dup != None):
+			result_indices.add(dup[1].decode(UTF_8).split(":")[1])
+			dup = cursor.next_dup()
+		iter = cursor.next()
+	return result_indices
+
+>>>>>>> 5def218bf67949edb4055df60f91a07f9a7577af
 def range_search():
 	exit()
 
 def complex_search():
 	exit()
 
+<<<<<<< HEAD
 # Not sure if we are supposed to filter out the weird characters like &#10
 def output(indices, output_type):
 	print("Output: \n")
+=======
+# So far I have the output format working for when output=brief - Levi
+def output(indices, view):
+	print("Output: ")
+>>>>>>> 5def218bf67949edb4055df60f91a07f9a7577af
 	rows = []
 	subjects = []
 	dates = []
@@ -167,6 +197,7 @@ def output(indices, output_type):
 		index = cre.set(index.encode(UTF_8))
 		for i in index:
 			string = str(i)
+<<<<<<< HEAD
 			
 			r = re.split("<row>", string)
 			if len(r) > 1:
@@ -222,28 +253,53 @@ def output(indices, output_type):
 			print("body: " + body[i] + "\n")	
 			print("-"*50)
 			i += 1
+=======
+			if view == VIEW_BRIEF:
+				r = re.split("<row>", string)
+				if len(r) > 1:
+					r = re.split("</row>", r[1])
+					rows.append(r[0])
+				s = re.split("<subj>", string)
+				if len(s) > 1:
+					s = re.split("</subj>", s[1])
+					subjects.append(s[0])
+	i = 0
+	while (i < len(rows)):	
+		print("Row: " + "%5s" % rows[i] + "   |   Subject: " + subjects[i] + "\n")
+		i += 1
+	# todo: add output formatting for output=full
+	print("-"*20)
+>>>>>>> 5def218bf67949edb4055df60f91a07f9a7577af
 
 def process_query(query, filtered_indices):
 	# Test for range search
 	result = re.split(">=|<=|<|>", query)
 	if len(result) == 2:
 		# do range search
-		return None
+		indices = {}
+
+		if result[0].find("=") != -1:
+			process_query("date:" + result[1], filtered_indices)
+		# todo: ranged search here
+
+		return indices & filtered_indices
 	elif len(result) > 2:
-		print("Wrong grammar")
+		print("Grammatical error")
 		return None
 
 	# Test for equality searches
 	result = query.split(":")
 	if len(result) == 2:
-		# do equality search
 		return equality_search(result, filtered_indices)
 	elif len(result) == 1:
 		# search on both subject and body
-		result1 = process_query("subj:" + query, filtered_indices)
-		return result1 | process_query("body:" + query, filtered_indices)
+		result1 = process_query("subj:" + query, None)
+		result1 |= process_query("body:" + query, None)
+		if filtered_indices != None:
+			result1 &= filtered_indices
+		return result1
 	else:
-		print("Wrong grammar")
+		print("Grammatical error")
 		return None
 
 def equality_search(pair, filtered_indices):
@@ -295,27 +351,6 @@ def equality_search(pair, filtered_indices):
 '''
 Returns a set of row_ids (string) based on a given key and cursor
 '''
-def partial_search(cursor, key):
-	# todo: handle cases where key has % here
-	result_indices = set()
-	iter = cursor.set_range(key)
-	while(iter != None and iter[0].find(key) != -1):
-		# we're putting the string representation of the number here instead
-		# of the actual integer since we have to encode it later, which
-		# requires a string
-		# i don't know if turning it to int makes the set interesection faster, though
-		result_indices.add(iter[1].decode(UTF_8).split(":")[1])
-
-		dup = cursor.next_dup()
-		while(dup != None):
-			result_indices.add(dup[1].decode(UTF_8).split(":")[1])
-			dup = cursor.next_dup()
-		iter = cursor.next()
-	return result_indices
-
-'''
-Returns a set of row_ids (string) based on a given key and cursor
-'''
 def equality_search_helper(cursor, key):
 	# todo: handle cases where key has % here
 	result_indices = set()
@@ -334,7 +369,7 @@ def equality_search_helper(cursor, key):
 		iter = cursor.next()
 	return result_indices
 
-def find_if_has_delimiter(text):
+def check_delimiter(text):
 	for delim in DELIMITERS:
 		val = text.find(delim)
 		if val != -1:
@@ -352,65 +387,139 @@ def is_query_valid(query):
 	is_valid |= term_pattern.match(query) != None
 	return is_valid
 
+DEBUG = False
+
+def debug_print(message):
+	if DEBUG: print(message)
 
 
 ############ PART 3: MAIN PROGRAM ####################################################################
 CODE_VER = 2
 
 if CODE_VER == 2:
-	output_type = OUTPUT_BRIEF
-
-
 	while(True):
 		os.system('cls' if os.name=='nt' else 'clear')
 		
 		txt = input("Query: ").lower()
 		
 		if (txt == "output=full"):
-			output_type = OUTPUT_FULL
+			view = VIEW_FULL
 			continue
 		elif  (txt == "output=brief"):
-			output_type = OUTPUT_BRIEF
+			view = VIEW_BRIEF
 			continue
 		
-		# todo handle the special cases with many whitespaces here (clean input)
 		queries = []
 		ind = 0
 		text_list = txt.split()
 		list_len = len(text_list)
+		is_valid = True
+		current_query = ""
 		while ind < list_len:
-			if ind + 2 < list_len:
-				test_query = text_list[ind] + text_list[ind + 1] + text_list[ind + 2]
-				if is_query_valid(test_query):
-					queries.append(test_query)
-					ind += 3
+			curr_text = text_list[ind]
+			current_query += curr_text
+			delim_ind = check_delimiter(curr_text)
+
+			# the delimiter is at last
+			if delim_ind == len(current_query) - 1:
+				debug_print("Case 1: " + current_query)
+				wild_ind = current_query.find("%")
+				if wild_ind != -1 and delim_ind == wild_ind:
+					# if that delim is % then check if valid: at last
+					if is_query_valid(current_query):
+						queries.append(current_query)
+						ind += 1
+						current_query = ""
+						continue
+				elif wild_ind != -1 and delim_ind != wild_ind:
+					# if wild delim is not last: error
+					# just go down
+					pass
+				else:
+					# else, then check next text
+					ind += 1
 					continue
-			
-			if ind + 1 < list_len:
-				test_query = text_list[ind] + text_list[ind + 1]
-				if is_query_valid(test_query):
-					queries.append(test_query)
-					ind += 2
+			elif delim_ind != -1:
+				debug_print("Case 2: " + current_query)
+				# delimiter is in between
+				if is_query_valid(current_query):
+					queries.append(current_query)
+					ind += 1
+					current_query = ""
 					continue
-			
-			test_query = text_list[ind]
-			if is_query_valid(test_query):
-				queries.append(test_query)
-				ind += 1
-				continue
 			else:
-				print("Grammatical error near " + test_query)
+				debug_print("Case 3: " + current_query)
+				if ind + 1 < list_len:
+					debug_print("Case 3.1: " + current_query)
+					# there is still a next term
+					next_term = text_list[ind + 1]
+					if check_delimiter(next_term) == -1:
+						# if next term has no delimiter
+						debug_print("Case 3.1.1: " + current_query)
+						if is_query_valid(current_query):
+							queries.append(current_query)
+							ind += 1
+							current_query = ""
+							continue
+					elif next_term.find("%") != -1:
+						debug_print("Case 3.1.2: " + current_query)
+						if next_term == "%":
+							current_query += next_term
+							if is_query_valid(current_query):
+								queries.append(current_query)
+								ind += 2
+								current_query = ""
+								continue
+						else:
+							# grammatical error
+							pass
+					elif next_term in DELIMITERS and ind + 2 < list_len:
+						debug_print("Case 3.1.3: " + current_query)
+						current_query += next_term + text_list[ind + 2]
+						if is_query_valid(current_query):
+							queries.append(current_query)
+							ind += 3
+							current_query = ""
+							continue
+					else:
+						# delimiter is before last term and has other characters in
+						debug_print("Case 3.1.4")
+						current_query += next_term
+						if is_query_valid(current_query):
+							queries.append(current_query)
+							ind += 2
+							current_query = ""
+							continue
+				elif is_query_valid(current_query):
+					debug_print("Case 3.2: " + current_query)
+					# there is no more terms left
+					queries.append(current_query)
+					ind += 1
+					current_query = ""
+					continue
+			
+			is_valid = False
+			print("Grammatical error near " + curr_text)
+			break
+		
+		if not is_valid:
+			break
 
 		filtered_indices = None
+		debug_print(queries)
 		
 		for query in queries:
-			# print("current query: " + query)
 			filtered_indices = process_query(query, filtered_indices)
+			if filtered_indices == None:
+				# an error happened somewhere
+				break
 		
 		if filtered_indices != None:
-			output(filtered_indices, output_type)
+			output(filtered_indices, view)
 		else:
-			print("Sorry :(")
+			print("No matching output.")
+		
+		# todo: do we loop the program???
 		break
 		
 elif CODE_VER == 1:
