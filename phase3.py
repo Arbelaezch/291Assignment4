@@ -298,6 +298,16 @@ def find_if_has_delimiter(text):
 			return val
 	return -1
 
+# reference: docs.python.org/3/howto/regex.html
+date_pattern = re.compile("^date(>\=|<\=|:|>|<)\d{4}/\d{2}/\d{2}$")
+email_pattern = re.compile("^(from|to|cc|bcc):(\w|\.)+@(\w|\.)+$")
+term_pattern = re.compile("^(subj:|subject:|body:)?[\w]+[%]?$")
+
+def is_query_valid(query):
+	is_valid = date_pattern.match(query) != None
+	is_valid |= email_pattern.match(query) != None
+	is_valid |= term_pattern.match(query) != None
+	return is_valid
 
 
 
@@ -307,10 +317,6 @@ CODE_VER = 2
 if CODE_VER == 2:
 	output_type = OUTPUT_BRIEF
 
-	# reference: docs.python.org/3/howto/regex.html
-	date_pattern = re.compile("^date(>\=|<\=|:|>|<)\d{4}/\d{2}/\d{2}$")
-	email_pattern = re.compile("^(from|to|cc|bcc):(\w|\.)+@(\w|\.)+$")
-	term_pattern = re.compile("^(subj:|subject:|body:)?[\w]+[%]?$")
 
 	while(True):
 		os.system('cls' if os.name=='nt' else 'clear')
@@ -326,37 +332,36 @@ if CODE_VER == 2:
 		
 		# todo handle the special cases with many whitespaces here (clean input)
 		queries = []
-		prefix_count = 0
-		current_query = ""
-		while txt != "":
-			txt = txt.strip()
-			space_ind = txt.find(" ")
-			prefix_count += 1
-			if space_ind != -1:
-				prefix = txt[:space_ind]
-				txt = txt[space_ind:]
+		ind = 0
+		text_list = txt.split()
+		list_len = len(text_list)
+		while ind < list_len:
+			if ind + 2 < list_len:
+				test_query = text_list[ind] + text_list[ind + 1] + text_list[ind + 2]
+				if is_query_valid(test_query):
+					queries.append(test_query)
+					ind += 3
+					continue
+			
+			if ind + 1 < list_len:
+				test_query = text_list[ind] + text_list[ind + 1]
+				if is_query_valid(test_query):
+					queries.append(test_query)
+					ind += 2
+					continue
+			
+			test_query = text_list[ind]
+			if is_query_valid(test_query):
+				queries.append(test_query)
+				ind += 1
+				continue
 			else:
-				prefix = txt
-				txt = ""
-
-			current_query += prefix
-			# validate query here
-			is_valid = date_pattern.match(current_query) != None
-			is_valid |= email_pattern.match(current_query) != None
-			is_valid |= term_pattern.match(current_query) != None
-			print(current_query)
-			if is_valid:
-				queries.append(current_query)
-				prefix_count = 0
-				current_query = ""
-			elif prefix_count >= 3:
-				print("Grammatical error near " + prefix)
-				break
+				print("Grammatical error near " + test_query)
 
 		filtered_indices = None
 		
 		for query in queries:
-			print("current query: " + query)
+			# print("current query: " + query)
 			filtered_indices = process_query(query, filtered_indices)
 		
 		if filtered_indices != None:
