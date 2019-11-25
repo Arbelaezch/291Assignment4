@@ -8,6 +8,7 @@ UTF_8 = "utf-8"
 OUTPUT_BRIEF = 0 # DEFAULT
 OUTPUT_FULL = 1
 WILDCARD_CHAR = "%"
+DELIMITERS = (":", "<", ">", "<=", ">=", "%")
 # endregion
 
 #### PART 1: Creates 4 databases based on the 4 index files and initializes cursors to each database. ###########################################
@@ -289,7 +290,14 @@ def equality_search_helper(cursor, key):
 			dup = cursor.next_dup()
 		iter = cursor.next()
 	return result_indices
-# -------------------
+
+def find_if_has_delimiter(text):
+	for delim in DELIMITERS:
+		val = text.find(delim)
+		if val != -1:
+			return val
+	return -1
+
 
 
 
@@ -299,24 +307,62 @@ CODE_VER = 2
 if CODE_VER == 2:
 	output_type = OUTPUT_BRIEF
 
+	# reference: docs.python.org/3/howto/regex.html
+	date_pattern = re.compile("^date(>\=|<\=|:|>|<)\d{4}/\d{2}/\d{2}$")
+	email_pattern = re.compile("^(from|to|cc|bcc):(\w|\.)+@(\w|\.)+$")
+	term_pattern = re.compile("^(subj:|subject:|body:)?[\w]+[%]?$")
+
 	while(True):
-		# todo handle the special cases with many whitespaces here (clean input)
 		os.system('cls' if os.name=='nt' else 'clear')
 		
 		txt = input("Query: ").lower()
-		# todo: the output changes here
+		
 		if (txt == "output=full"):
 			output_type = OUTPUT_FULL
 			continue
 		elif  (txt == "output=brief"):
 			output_type = OUTPUT_BRIEF
 			continue
-			
-		queries = txt.split()
+		
+		# todo handle the special cases with many whitespaces here (clean input)
+		queries = []
+		prefix_count = 0
+		current_query = ""
+		while txt != "":
+			txt = txt.strip()
+			space_ind = txt.find(" ")
+			prefix_count += 1
+			if space_ind != -1:
+				prefix = txt[:space_ind]
+				txt = txt[space_ind:]
+			else:
+				prefix = txt
+				txt = ""
+
+			current_query += prefix
+			# validate query here
+			is_valid = date_pattern.match(current_query) != None
+			is_valid |= email_pattern.match(current_query) != None
+			is_valid |= term_pattern.match(current_query) != None
+			print(current_query)
+			if is_valid:
+				queries.append(current_query)
+				prefix_count = 0
+				current_query = ""
+			elif prefix_count >= 3:
+				print("Grammatical error near " + prefix)
+				break
+
 		filtered_indices = None
+		
 		for query in queries:
+			print("current query: " + query)
 			filtered_indices = process_query(query, filtered_indices)
-		output(filtered_indices, output_type)
+		
+		if filtered_indices != None:
+			output(filtered_indices, output_type)
+		else:
+			print("Sorry :(")
 		break
 		
 elif CODE_VER == 1:
