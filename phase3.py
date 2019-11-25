@@ -180,6 +180,14 @@ def partial_search(cursor, key):
 
 
 def output(indices, output_type):
+
+    # check if none in result indices
+    for ind in indices:
+        if ind == None:
+            print("Okie dokie")
+        else:
+            print(ind)
+
     print("Output: \n")
     rows = []
     subjects = []
@@ -272,6 +280,9 @@ def range_search(query):
     # >
     elif query.find(">") != -1:
         itera = cursor.set(key)
+        if itera == None:
+            return set()
+        
         dup = cursor.next()
         while(True):
             if itera[0] == dup[0]:
@@ -286,26 +297,21 @@ def range_search(query):
         return result_indices
     # <
     elif query.find("<") != -1:
-        print("date: ", )
-        print("arg2: ", arg2)
-        print("key: ", key)
         itera = cursor.first()
-        date.add(itera[0].decode(UTF_8).split(":")[0])
-        check = str(itera[0])
-        print(check)
+        if itera == None:
+            return set()
 
-        while(check != key):
+        date = itera[0].decode(UTF_8).split(":")[0]
+
+        while(date < arg2):
             # print(itera[0])
 
-            result_indices.add(itera[1].decode(UTF_8).split(":")[0])
+            stuff = itera[1].decode(UTF_8).split(":")[1]
+            result_indices.add(stuff)
             itera = cursor.next()
             if itera == None:
                 break
-
-            date.pop()
-
-            check = str(itera[0])
-            date.add(itera[0])
+            date = itera[1].decode(UTF_8).split(":")[0]
 
         return result_indices
 
@@ -351,6 +357,7 @@ def process_query(query, filtered_indices):
         if result[0].find("=") != -1:
             indices = process_query("date:" + result[1], filtered_indices)
             # todo: ranged search here
+
 
         if filtered_indices == None:
             return indices
