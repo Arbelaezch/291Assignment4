@@ -198,43 +198,68 @@ def output(indices, output_type):
             print("-"*50)
             i += 1
 
-
+# range_search(): Returns the row IDs of emails that match the date query.
 def range_search(query):
     cursor = cda
     result = re.split(">=|<=|<|>", query)
-    arg1 = result[0].strip()
     arg2 = result[1].strip()
-    key = arg2.encode(UTF_8)
     result_indices = set()
 
     date = set()
 
     # >=
     if query.find(">=") != -1:
-        itera = cursor.set(key)
-        print("wrong way")
-        exit()
-    # <=
-    elif query.find("<=") != -1:
-        print("wrong way")
-        exit()
-    # >
-    elif query.find(">") != -1:
-        itera = cursor.set(key)
+        itera = cursor.last()
         if itera == None:
             return set()
 
-        dup = cursor.next()
-        while(True):
-            if itera[0] == dup[0]:
-                itera = dup
-                dup = cursor.next()
-            else:
-                itera = dup
+        date = itera[0].decode(UTF_8).split(":")[0]
+
+        while(date >= arg2):
+            # print(itera[0])
+
+            stuff = itera[1].decode(UTF_8).split(":")[1]
+            result_indices.add(stuff)
+            itera = cursor.prev()
+            if itera == None:
                 break
-        while(itera != None):
-            result_indices.add(itera[1].decode(UTF_8).split(":")[1])
+            date = itera[1].decode(UTF_8).split(":")[0]
+        return result_indices
+    # <=
+    elif query.find("<=") != -1:
+        itera = cursor.first()
+        if itera == None:
+            return set()
+
+        date = itera[0].decode(UTF_8).split(":")[0]
+
+        while(date <= arg2):
+            # print(itera[0])
+
+            stuff = itera[1].decode(UTF_8).split(":")[1]
+            result_indices.add(stuff)
             itera = cursor.next()
+            if itera == None:
+                break
+            date = itera[1].decode(UTF_8).split(":")[0]
+        return result_indices
+    # >
+    elif query.find(">") != -1:
+        itera = cursor.last()
+        if itera == None:
+            return set()
+
+        date = itera[0].decode(UTF_8).split(":")[0]
+
+        while(date > arg2):
+            # print(itera[0])
+
+            stuff = itera[1].decode(UTF_8).split(":")[1]
+            result_indices.add(stuff)
+            itera = cursor.prev()
+            if itera == None:
+                break
+            date = itera[1].decode(UTF_8).split(":")[0]
         return result_indices
     # <
     elif query.find("<") != -1:
@@ -253,7 +278,6 @@ def range_search(query):
             if itera == None:
                 break
             date = itera[1].decode(UTF_8).split(":")[0]
-
         return result_indices
 
 
