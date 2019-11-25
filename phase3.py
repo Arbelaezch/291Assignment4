@@ -4,6 +4,7 @@ import os
 import re
 
 # region Constant Variables
+DEBUG = True
 UTF_8 = "utf-8"
 VIEW_BRIEF = 1 # DEFAULT
 VIEW_FULL = 2
@@ -376,11 +377,120 @@ def is_query_valid(query):
 	is_valid |= term_pattern.match(query) != None
 	return is_valid
 
-DEBUG = True
-
 def debug_print(message):
 	if DEBUG: print(message)
 
+"""
+	This while-loop cleans up the input queries
+	It divides up the input into single queries that process query can understand
+	if each element was used as the query argument
+"""
+def cleanup_input(txt):
+	queries = []
+	ind = 0
+	text_list = txt.split()
+	list_len = len(text_list)
+	current_query = ""
+	
+	while ind < list_len:
+		curr_text = text_list[ind]
+		current_query += curr_text
+		delim_ind = check_delimiter(current_query)
+
+		# the delimiter is at last
+		if delim_ind == len(current_query) - 1:
+			debug_print("Case 1: " + current_query)
+			wild_ind = current_query.find("%")
+			if wild_ind != -1 and delim_ind == wild_ind:
+				# if that delim is % then check if valid: at last
+				if is_query_valid(current_query):
+					queries.append(current_query)
+					ind += 1
+					current_query = ""
+					continue
+			elif wild_ind != -1 and delim_ind != wild_ind:
+				# if wild delim is not last: error
+				# just go down
+				pass
+			else:
+				# else, then check next text
+				ind += 1
+				continue
+		elif delim_ind != -1:
+			# delimiter is in between
+			debug_print("Case 2: " + current_query)
+			if is_query_valid(current_query):
+				queries.append(current_query)
+				ind += 1
+				current_query = ""
+				continue
+		else:
+			# there is no delimiter in current text
+			debug_print("Case 3: " + current_query)
+			if ind + 1 < list_len:
+				debug_print("Case 3.1: " + current_query)
+				# there is still a next term
+				next_term = text_list[ind + 1]
+				if check_delimiter(next_term) == -1:
+					# if next term has no delimiter
+					debug_print("Case 3.1.1: " + current_query)
+					if is_query_valid(current_query):
+						queries.append(current_query)
+						ind += 1
+						current_query = ""
+						continue
+				elif next_term.find("%") != -1:
+					debug_print("Case 3.1.2: " + current_query)
+					if next_term == "%":
+						current_query += next_term
+						if is_query_valid(current_query):
+							queries.append(current_query)
+							ind += 2
+							current_query = ""
+							continue
+					else:
+						# grammatical error
+						pass
+				elif next_term in DELIMITERS and ind + 2 < list_len:
+					debug_print("Case 3.1.3: " + current_query)
+					current_query += next_term + text_list[ind + 2]
+					if is_query_valid(current_query):
+						queries.append(current_query)
+						ind += 3
+						current_query = ""
+						continue
+				else:
+					# delimiter is before last term and has other characters in
+					# SPECIAL CASE
+					debug_print("Case 3.1.4:")
+
+					# if first part contains special keywords then we don't add next term
+					first_part = re.split(" |:|>=|<=|<|>", next_term)[0]
+					if first_part in ("body", "subj", "subject", "cc", "bcc", "date", "from", "to"):
+						debug_print("Case 3.1.4.1: " + current_query)
+						ind += 1
+					else:
+						current_query += next_term
+						debug_print("Case 3.1.4.2: " + current_query)
+						ind += 2
+					
+					if is_query_valid(current_query):
+						queries.append(current_query)
+						current_query = ""
+						continue
+			elif is_query_valid(current_query):
+				debug_print("Case 3.2: " + current_query)
+				# there is no more terms left
+				queries.append(current_query)
+				ind += 1
+				current_query = ""
+				continue
+		
+		queries = None
+		print("Grammatical error near " + curr_text)
+		break
+
+	return queries
 
 ############ PART 3: MAIN PROGRAM ####################################################################
 CODE_VER = 2
@@ -398,116 +508,9 @@ if CODE_VER == 2:
 			view = VIEW_BRIEF
 			continue
 		
-		queries = []
-		ind = 0
-		text_list = txt.split()
-		list_len = len(text_list)
-		is_valid = True
-		current_query = ""
+		queries = cleanup_input(txt)
 		
-		"""
-			This while-loop cleans up the input queries
-			It divides up the input into single queries that process query can understand
-		"""
-		while ind < list_len:
-			curr_text = text_list[ind]
-			current_query += curr_text
-			delim_ind = check_delimiter(current_query)
-
-			# the delimiter is at last
-			if delim_ind == len(current_query) - 1:
-				debug_print("Case 1: " + current_query)
-				wild_ind = current_query.find("%")
-				if wild_ind != -1 and delim_ind == wild_ind:
-					# if that delim is % then check if valid: at last
-					if is_query_valid(current_query):
-						queries.append(current_query)
-						ind += 1
-						current_query = ""
-						continue
-				elif wild_ind != -1 and delim_ind != wild_ind:
-					# if wild delim is not last: error
-					# just go down
-					pass
-				else:
-					# else, then check next text
-					ind += 1
-					continue
-			elif delim_ind != -1:
-				# delimiter is in between
-				debug_print("Case 2: " + current_query)
-				if is_query_valid(current_query):
-					queries.append(current_query)
-					ind += 1
-					current_query = ""
-					continue
-			else:
-				# there is no delimiter in current text
-				debug_print("Case 3: " + current_query)
-				if ind + 1 < list_len:
-					debug_print("Case 3.1: " + current_query)
-					# there is still a next term
-					next_term = text_list[ind + 1]
-					if check_delimiter(next_term) == -1:
-						# if next term has no delimiter
-						debug_print("Case 3.1.1: " + current_query)
-						if is_query_valid(current_query):
-							queries.append(current_query)
-							ind += 1
-							current_query = ""
-							continue
-					elif next_term.find("%") != -1:
-						debug_print("Case 3.1.2: " + current_query)
-						if next_term == "%":
-							current_query += next_term
-							if is_query_valid(current_query):
-								queries.append(current_query)
-								ind += 2
-								current_query = ""
-								continue
-						else:
-							# grammatical error
-							pass
-					elif next_term in DELIMITERS and ind + 2 < list_len:
-						debug_print("Case 3.1.3: " + current_query)
-						current_query += next_term + text_list[ind + 2]
-						if is_query_valid(current_query):
-							queries.append(current_query)
-							ind += 3
-							current_query = ""
-							continue
-					else:
-						# delimiter is before last term and has other characters in
-						# SPECIAL CASE
-						debug_print("Case 3.1.4:")
-
-						# if first part contains special keywords then we don't add next term
-						first_part = re.split(" |:|>=|<=|<|>", next_term)[0]
-						if first_part in ("body", "subj", "subject", "cc", "bcc", "date", "from", "to"):
-							debug_print("Case 3.1.4.1: " + current_query)
-							ind += 1
-						else:
-							current_query += next_term
-							debug_print("Case 3.1.4.2: " + current_query)
-							ind += 2
-						
-						if is_query_valid(current_query):
-							queries.append(current_query)
-							current_query = ""
-							continue
-				elif is_query_valid(current_query):
-					debug_print("Case 3.2: " + current_query)
-					# there is no more terms left
-					queries.append(current_query)
-					ind += 1
-					current_query = ""
-					continue
-			
-			is_valid = False
-			print("Grammatical error near " + curr_text)
-			break
-		
-		if not is_valid:
+		if queries == None:
 			break
 
 		filtered_indices = None
