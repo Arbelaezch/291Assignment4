@@ -7,6 +7,7 @@ import re
 UTF_8 = "utf-8"
 OUTPUT_BRIEF = 0 # DEFAULT
 OUTPUT_FULL = 1
+WILDCARD_CHAR = "%"
 # endregion
 
 #### PART 1: Creates 4 databases based on the 4 index files and initializes cursors to each database. ###########################################
@@ -195,13 +196,8 @@ def process_query(query, filtered_indices):
 		return equality_search(result, filtered_indices)
 	elif len(result) == 1:
 		# search on both subject and body
-		if query.find("%") != -1:
-			# do partial search
-			pass
-		else:
-			# do pure search
-			pass
-		return None
+		result1 = process_query("subj:" + query, filtered_indices)
+		return result1 | process_query("body:" + query, filtered_indices)
 	else:
 		print("Wrong grammar")
 		return None
@@ -234,8 +230,15 @@ def equality_search(pair, filtered_indices):
 	assert key != None
 
 	# result_indices is a set
-	result_indices = equality_search_helper(cursor, key)
-	
+	key_str = key.decode(UTF_8)
+	wildcard_ind = key_str.find(WILDCARD_CHAR)
+	if wildcard_ind == -1:
+		result_indices = equality_search_helper(cursor, key)
+	else:
+		key_str = key_str[:wildcard_ind]
+		key = key_str.encode(UTF_8)
+		result_indices = partial_search(cursor, key)
+
 	# for multiple searches
 	if filtered_indices == None:
 		filtered_indices = result_indices
@@ -244,6 +247,30 @@ def equality_search(pair, filtered_indices):
 		filtered_indices = filtered_indices & result_indices
 	
 	return filtered_indices
+
+def partial_compare(val1, val2):
+	return False
+
+'''
+Returns a set of row_ids (string) based on a given key and cursor
+'''
+def partial_search(cursor, key):
+	# todo: handle cases where key has % here
+	result_indices = set()
+	iter = cursor.set_range(key)
+	while(iter != None and iter[0].find(key) != -1):
+		# we're putting the string representation of the number here instead
+		# of the actual integer since we have to encode it later, which
+		# requires a string
+		# i don't know if turning it to int makes the set interesection faster, though
+		result_indices.add(iter[1].decode(UTF_8).split(":")[1])
+
+		dup = cursor.next_dup()
+		while(dup != None):
+			result_indices.add(dup[1].decode(UTF_8).split(":")[1])
+			dup = cursor.next_dup()
+		iter = cursor.next()
+	return result_indices
 
 '''
 Returns a set of row_ids (string) based on a given key and cursor
@@ -285,7 +312,7 @@ if CODE_VER == 2:
 			output_type = OUTPUT_FULL
 			continue
 		elif  (txt == "output=brief"):
-			output_type - OUTPUT_BRIEF
+			output_type = OUTPUT_BRIEF
 			continue
 			
 		queries = txt.split()
